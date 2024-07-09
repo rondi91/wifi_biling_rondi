@@ -2,7 +2,7 @@
 include 'config.php';
 
 // Buat tabel-tabel
-$sql = "
+$sql_create_tables = "
 CREATE TABLE IF NOT EXISTS customers (
     customer_id INT AUTO_INCREMENT PRIMARY KEY,
     first_name VARCHAR(255) NOT NULL,
@@ -62,14 +62,16 @@ CREATE TABLE IF NOT EXISTS payments (
 );
 ";
 
-if ($conn->multi_query($sql) === TRUE) {
+if ($conn->multi_query($sql_create_tables) === TRUE) {
     echo "Tables created successfully";
+    // Kosongkan hasil set
+    while ($conn->more_results() && $conn->next_result());
 } else {
     echo "Error creating tables: " . $conn->error;
 }
 
 // Menambahkan data dummy
-$sql = "
+$sql_insert_data = "
 INSERT INTO customers (first_name, last_name, email, phone, address, registration_date) VALUES
 ('Alice', 'Smith', 'alice.smith@example.com', '1234567891', '123 Maple Street', '2023-01-01'),
 ('Bob', 'Johnson', 'bob.johnson@example.com', '1234567892', '456 Oak Street', '2023-02-01'),
@@ -113,11 +115,14 @@ INSERT INTO payments (billing_id, payment_date, amount, payment_method) VALUES
 (5, '2023-07-19', 1000000.00, 'Kartu Kredit');
 ";
 
-if ($conn->multi_query($sql) === TRUE) {
+if ($conn->multi_query($sql_insert_data) === TRUE) {
     echo "Dummy data inserted successfully";
 } else {
     echo "Error inserting dummy data: " . $conn->error;
 }
+
+// Kosongkan hasil set jika ada
+while ($conn->more_results() && $conn->next_result());
 
 $conn->close();
 ?>
