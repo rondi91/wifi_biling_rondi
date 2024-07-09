@@ -2,7 +2,7 @@
 include 'config.php';
 
 // Buat tabel-tabel
-$sql_tables = "
+$sql = "
 CREATE TABLE IF NOT EXISTS customers (
     customer_id INT AUTO_INCREMENT PRIMARY KEY,
     first_name VARCHAR(255) NOT NULL,
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
     FOREIGN KEY (plan_id) REFERENCES plans(plan_id)
 );
 
-CREATE TABLE IF NOT EXISTS usage (
+CREATE TABLE IF NOT EXISTS `usage` (
     usage_id INT AUTO_INCREMENT PRIMARY KEY,
     customer_id INT NOT NULL,
     date DATE NOT NULL,
@@ -62,67 +62,49 @@ CREATE TABLE IF NOT EXISTS payments (
 );
 ";
 
-if ($conn->multi_query($sql_tables)) {
-    do {
-        // Skip all results
-        if ($result = $conn->store_result()) {
-            $result->free();
-        }
-    } while ($conn->next_result());
-    echo "Tables created successfully<br>";
+if ($conn->multi_query($sql) === TRUE) {
+    echo "Tables created successfully";
 } else {
     echo "Error creating tables: " . $conn->error;
-    $conn->close();
-    exit;
 }
 
 // Menambahkan data dummy
-$sql_customers = "
+$sql = "
 INSERT INTO customers (first_name, last_name, email, phone, address, registration_date) VALUES
 ('Alice', 'Smith', 'alice.smith@example.com', '1234567891', '123 Maple Street', '2023-01-01'),
 ('Bob', 'Johnson', 'bob.johnson@example.com', '1234567892', '456 Oak Street', '2023-02-01'),
 ('Carol', 'Williams', 'carol.williams@example.com', '1234567893', '789 Pine Street', '2023-03-01'),
 ('David', 'Brown', 'david.brown@example.com', '1234567894', '101 Cedar Street', '2023-04-01'),
 ('Eve', 'Davis', 'eve.davis@example.com', '1234567895', '202 Birch Street', '2023-05-01');
-";
 
-$sql_plans = "
 INSERT INTO plans (plan_name, speed, data_limit, price) VALUES
 ('Basic Plan', '50 Mbps', '500 GB', 300000.00),
 ('Standard Plan', '100 Mbps', '1000 GB', 500000.00),
 ('Premium Plan', '200 Mbps', 'Unlimited', 700000.00),
 ('Student Plan', '25 Mbps', '200 GB', 150000.00),
 ('Business Plan', '500 Mbps', 'Unlimited', 1000000.00);
-";
 
-$sql_subscriptions = "
 INSERT INTO subscriptions (customer_id, plan_id, start_date, end_date, status) VALUES
 (1, 1, '2023-01-01', '2024-01-01', 'Aktif'),
 (2, 2, '2023-02-01', '2024-02-01', 'Aktif'),
 (3, 3, '2023-03-01', '2024-03-01', 'Aktif'),
 (4, 4, '2023-04-01', '2024-04-01', 'Aktif'),
 (5, 5, '2023-05-01', '2024-05-01', 'Aktif');
-";
 
-$sql_usage = "
-INSERT INTO usage (customer_id, date, data_used) VALUES
+INSERT INTO `usage` (customer_id, date, data_used) VALUES
 (1, '2023-06-01', 100.50),
 (2, '2023-06-01', 200.75),
 (3, '2023-06-01', 150.00),
 (4, '2023-06-01', 50.25),
 (5, '2023-06-01', 300.10);
-";
 
-$sql_billing = "
 INSERT INTO billing (customer_id, subscription_id, billing_date, due_date, amount, status) VALUES
 (1, 1, '2023-07-01', '2023-07-31', 300000.00, 'Belum Dibayar'),
 (2, 2, '2023-07-01', '2023-07-31', 500000.00, 'Belum Dibayar'),
 (3, 3, '2023-07-01', '2023-07-31', 700000.00, 'Belum Dibayar'),
 (4, 4, '2023-07-01', '2023-07-31', 150000.00, 'Belum Dibayar'),
 (5, 5, '2023-07-01', '2023-07-31', 1000000.00, 'Belum Dibayar');
-";
 
-$sql_payments = "
 INSERT INTO payments (billing_id, payment_date, amount, payment_method) VALUES
 (1, '2023-07-15', 300000.00, 'Kartu Kredit'),
 (2, '2023-07-16', 500000.00, 'Transfer Bank'),
@@ -131,22 +113,11 @@ INSERT INTO payments (billing_id, payment_date, amount, payment_method) VALUES
 (5, '2023-07-19', 1000000.00, 'Kartu Kredit');
 ";
 
-// Fungsi untuk menjalankan query dan menangani hasilnya
-function executeQuery($conn, $sql, $description) {
-    if ($conn->query($sql) === TRUE) {
-        echo "$description inserted successfully<br>";
-    } else {
-        echo "Error inserting $description: " . $conn->error . "<br>";
-    }
+if ($conn->multi_query($sql) === TRUE) {
+    echo "Dummy data inserted successfully";
+} else {
+    echo "Error inserting dummy data: " . $conn->error;
 }
-
-// Jalankan query untuk menambahkan data dummy
-executeQuery($conn, $sql_customers, "Customers");
-executeQuery($conn, $sql_plans, "Plans");
-executeQuery($conn, $sql_subscriptions, "Subscriptions");
-executeQuery($conn, $sql_usage, "Usage");
-executeQuery($conn, $sql_billing, "Billing");
-executeQuery($conn, $sql_payments, "Payments");
 
 $conn->close();
 ?>
