@@ -1,4 +1,6 @@
+
 <?php
+
 function convert_number_to_words($number) {
     $hyphen      = ' ';
     $conjunction = ' dan ';
@@ -42,11 +44,11 @@ function convert_number_to_words($number) {
         1000000000000000    => 'sePeta',
         1000000000000000000 => 'seExa'
     );
-    
+
     if (!is_numeric($number)) {
         return false;
     }
-    
+
     if (($number >= 0 && (int) $number < 0) || (int) $number < 0 - PHP_INT_MAX) {
         // overflow
         trigger_error(
@@ -79,7 +81,7 @@ function convert_number_to_words($number) {
             }
             break;
         case $number < 1000:
-            $hundreds  = $number / 100;
+            $hundreds  = floor($number / 100);
             $remainder = $number % 100;
             $string = $dictionary[$hundreds] . ' ratus';
             if ($remainder) {
@@ -88,7 +90,7 @@ function convert_number_to_words($number) {
             break;
         default:
             $baseUnit = pow(1000, floor(log($number, 1000)));
-            $numBaseUnits = (int) ($number / $baseUnit);
+            $numBaseUnits = floor($number / $baseUnit);
             $remainder = $number % $baseUnit;
             $string = convert_number_to_words($numBaseUnits) . ' ' . $dictionary[$baseUnit];
             if ($remainder) {
@@ -109,4 +111,3 @@ function convert_number_to_words($number) {
 
     return $string;
 }
-?>
