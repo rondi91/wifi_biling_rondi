@@ -25,9 +25,14 @@ if (isset($_GET['id'])) {
             $usage[] = $row;
         }
     }
+ 
 
     // Ambil data transaksi pembayaran pelanggan
-    $sql = "SELECT * FROM billing WHERE customer_id = $customer_id ORDER BY billing_date DESC";
+    $sql = "SELECT * 
+            FROM billing b   
+            LEFT join payments pay on b.billing_id = pay.billing_id
+            WHERE customer_id = $customer_id
+            ORDER BY billing_date DESC;";
     $billing_result = $conn->query($sql);
     $billing = [];
     if ($billing_result->num_rows > 0) {
@@ -100,6 +105,7 @@ if (isset($_GET['id'])) {
                     <td><?php echo $b['amount']; ?></td>
                     <td><?php echo $b['billing_date']; ?></td>
                     <td><?php echo $b['status']; ?></td>
+                    
                     <td>
                         <a href="nota.php?id=<?php echo $b['billing_id']; ?>">View Nota</a>
                     </td>
