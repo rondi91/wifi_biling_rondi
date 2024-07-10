@@ -114,6 +114,7 @@ if (isset($_GET['delete'])) {
                 <td>
                     <a href="edit_customer.php?id=<?php echo $customer['customer_id']; ?>">Edit</a>
                     <a href="customers.php?delete=<?php echo $customer['customer_id']; ?>" onclick="return confirm('Are you sure you want to delete this customer?')">Delete</a>
+                    <a href="customer_detail.php?id=<?php echo $customer['customer_id']; ?>">Details</a>
                 </td>
             </tr>
             <?php endforeach; ?>
