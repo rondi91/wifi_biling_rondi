@@ -42,13 +42,21 @@ if (isset($_POST['submit'])) {
 // Handle proses hapus pelanggan
 if (isset($_GET['delete'])) {
     $customer_id = $_GET['delete'];
-    $sql = "DELETE FROM customers WHERE customer_id = $customer_id";
+
+    // Hapus semua baris terkait di tabel billing
+    $sql = "DELETE FROM billing WHERE customer_id = $customer_id";
     if ($conn->query($sql) === TRUE) {
-        // Refresh halaman setelah berhasil
-        header("Location: customers.php");
-        exit();
+        // Hapus pelanggan setelah menghapus baris terkait di tabel billing
+        $sql = "DELETE FROM customers WHERE customer_id = $customer_id";
+        if ($conn->query($sql) === TRUE) {
+            // Refresh halaman setelah berhasil
+            header("Location: customers.php");
+            exit();
+        } else {
+            echo "Error deleting customer record: " . $conn->error;
+        }
     } else {
-        echo "Error deleting record: " . $conn->error;
+        echo "Error deleting billing records: " . $conn->error;
     }
 }
 ?>
