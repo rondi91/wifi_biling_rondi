@@ -1,5 +1,5 @@
 <?php
-include 'config.php';
+include '../config.php';
 
 // Fungsi untuk mendapatkan semua data pelanggan
 function getAllCustomers() {

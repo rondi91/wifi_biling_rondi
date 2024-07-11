@@ -1,5 +1,5 @@
 <?php
-include 'config.php';
+include '../config.php';
 include 'convert_number_to_words.php';
 
 if (isset($_GET['id'])) {

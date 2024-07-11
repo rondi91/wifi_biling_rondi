@@ -1,5 +1,5 @@
 <?php
-include 'config.php';
+include '../config.php';
 
 if (isset($_GET['id'])) {
     $customer_id = $_GET['id'];

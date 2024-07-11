@@ -12,7 +12,7 @@
             <h2>Admin Dashboard</h2>
             <ul>
                 <li><a href="#">Dashboard</a></li>
-                <li><a href="customers.php">Customers</a></li>
+                <li><a href="customer/customers.php">Customers</a></li>
                 <li><a href="#">Plans</a></li>
                 <li><a href="#">Subscriptions</a></li>
                 <li><a href="#">Usage</a></li>
