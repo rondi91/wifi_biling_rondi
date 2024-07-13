@@ -1,14 +1,23 @@
 <?php
 include '../config.php';
 
-// Fetch billing data from the database
+// Default values for month and year
+$selected_month = isset($_GET['month']) ? $_GET['month'] : date('m');
+$selected_year = isset($_GET['year']) ? $_GET['year'] : date('Y');
+
+// Fetch billing data from the database based on filter
 $sql = "SELECT b.billing_id, b.customer_id, b.billing_date, b.amount, b.status, 
                c.first_name, c.last_name, p.speed, p.price
         FROM billing b
         JOIN customers c ON b.customer_id = c.customer_id
-        JOIN plans p ON c.customer_id = p.plan_id";
-
-$result = $conn->query($sql);
+        JOIN subscriptions s ON c.customer_id = s.plan_id
+        JOIN plans p on s.plan_id = p.plan_id
+        WHERE MONTH(b.billing_date) = ? AND YEAR(b.billing_date) = ?";
+        
+$stmt = $conn->prepare($sql);
+$stmt->bind_param('ii', $selected_month, $selected_year);
+$stmt->execute();
+$result = $stmt->get_result();
 $billings = [];
 if ($result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
@@ -30,6 +39,31 @@ $conn->close();
 <body>
 <div class="container">
     <h1>Billing List</h1>
+    
+    <form method="GET" action="" class="form-inline mb-3">
+        <div class="form-group mr-2">
+            <label for="month" class="mr-2">Month</label>
+            <select class="form-control" id="month" name="month">
+                <?php for ($m=1; $m<=12; $m++): ?>
+                    <option value="<?php echo $m; ?>" <?php if ($m == $selected_month) echo 'selected'; ?>>
+                        <?php echo date('F', mktime(0, 0, 0, $m, 1)); ?>
+                    </option>
+                <?php endfor; ?>
+            </select>
+        </div>
+        <div class="form-group mr-2">
+            <label for="year" class="mr-2">Year</label>
+            <select class="form-control" id="year" name="year">
+                <?php for ($y=2020; $y<=date('Y'); $y++): ?>
+                    <option value="<?php echo $y; ?>" <?php if ($y == $selected_year) echo 'selected'; ?>>
+                        <?php echo $y; ?>
+                    </option>
+                <?php endfor; ?>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Filter</button>
+    </form>
+
     <table class="table table-striped">
         <thead>
             <tr>
