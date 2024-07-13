@@ -17,6 +17,7 @@ if (isset($_GET['id'])) {
     }
 }
 
+
 // Handle proses update pelanggan
 if (isset($_POST['submit'])) {
     $customer_id = $_POST['customer_id'];
@@ -25,7 +26,9 @@ if (isset($_POST['submit'])) {
     $email = $_POST['email'];
     $phone = $_POST['phone'];
     $address = $_POST['address'];
-
+    $plan_id = $_POST['plan_id'];
+// var_dump($plan_id);
+// die;
     $sql = "UPDATE customers SET 
             first_name = '$first_name', 
             last_name = '$last_name', 
@@ -33,14 +36,34 @@ if (isset($_POST['submit'])) {
             phone = '$phone', 
             address = '$address' 
             WHERE customer_id = $customer_id";
-
+    
     if ($conn->query($sql) === TRUE) {
+        
+        // update subscription
+        $sql = "UPDATE subscriptions SET 
+            plan_id = '$plan_id'
+            WHERE customer_id = $customer_id";
+        if ($conn->query($sql) === TRUE) {
         // Redirect ke halaman customers.php setelah berhasil update
         header("Location: customers.php");
         exit();
     } else {
         echo "Error updating record: " . $conn->error;
     }
+}
+}
+
+// Fetch plan from the database
+$sql = "SELECT * FROM plans
+";
+$result = $conn->query($sql);
+
+$plan = [];
+if ($result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        $plan[] = $row;
+    }
+
 }
 ?>
 
@@ -74,6 +97,17 @@ if (isset($_POST['submit'])) {
             
             <label for="address">Address:</label>
             <textarea id="address" name="address"><?php echo $customer['address']; ?></textarea><br><br>
+
+            <div class="form-group">
+                <label for="plan_id">Speed Plan</label>
+                <select class="form-control" id="plan_id" name="plan_id" required>
+                    <?php foreach ($plan as $plans): ?>
+                        <option value="<?php echo $plans['plan_id']; ?>"<?php echo ($customer['customer_id'] == $plans['plan_id']) ? 'selected' : ''; ?>>
+                            <?php echo $plans['speed'] . ' - Rp. ' . number_format($plans['price'], 2, ',', '.'); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
             
             <button type="submit" name="submit">Update Customer</button>
         </form>

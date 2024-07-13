@@ -15,6 +15,7 @@ function getAllCustomers() {
     return $customers;
 }
 
+
 // Ambil semua pelanggan dari database
 $customers = getAllCustomers();
 
@@ -26,16 +27,30 @@ if (isset($_POST['submit'])) {
     $phone = $_POST['phone'];
     $address = $_POST['address'];
     $registration_date = date('Y-m-d'); // Tanggal registrasi hari ini
+    $plan_id = $_POST['plan_id'];
+    
 
     $sql = "INSERT INTO customers (first_name, last_name, email, phone, address, registration_date) 
             VALUES ('$first_name', '$last_name', '$email', '$phone', '$address', '$registration_date')";
-    
-    if ($conn->query($sql) === TRUE) {
-        // Refresh halaman setelah berhasil
-        header("Location: customers.php");
-        exit();
-    } else {
-        echo "Error: " . $sql . "<br>" . $conn->error;
+
+        if ($conn->query($sql) === TRUE) {
+            $customer_id = $conn->insert_id;
+
+        // Insert initial usage data into usage table
+        $start_date = date('Y-m-d');
+        $end_date = date('Y-m-d', strtotime('+1 month'));
+        $status = "aktif";
+
+        $sql = "INSERT INTO subscriptions (customer_id, plan_id, start_date, end_date, status) VALUES ('$customer_id', '$plan_id', '$start_date', '$end_date','$status')";
+        
+        
+        if ($conn->query($sql) === TRUE) {
+            // Refresh halaman setelah berhasil
+            header("Location: customers.php");
+            exit();
+        } else {
+            echo "Error: " . $sql . "<br>" . $conn->error;
+        }
     }
 }
 
@@ -59,6 +74,19 @@ if (isset($_GET['delete'])) {
         echo "Error deleting billing records: " . $conn->error;
     }
 }
+
+// Fetch plan from the database
+$sql = "SELECT * FROM plans";
+$result = $conn->query($sql);
+
+$plan = [];
+if ($result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        $plan[] = $row;
+    }
+
+}
+// var_dump($plan);
 ?>
 
 <!DOCTYPE html>
@@ -86,9 +114,22 @@ if (isset($_GET['delete'])) {
             <input type="text" id="phone" name="phone" required><br><br>
             <label for="address">Address:</label>
             <textarea id="address" name="address"></textarea><br><br>
+            
+            <div class="form-group">
+                <label for="plan_id">Speed Plan</label>
+                <select class="form-control" id="plan_id" name="plan_id" required>
+                    <?php foreach ($plan as $plans): ?>
+                        <option value="<?php echo $plans['plan_id']; ?>">
+                            <?php echo $plans['speed'] . ' - Rp. ' . number_format($plans['price'], 2, ',', '.'); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            
             <button type="submit" name="submit">Add Customer</button>
         </form>
-
+        
         <hr>
 
         <!-- Tabel untuk menampilkan daftar pelanggan -->

@@ -15,9 +15,10 @@ if (isset($_GET['id'])) {
     }
 
     // Ambil data paket yang diambil pelanggan
-    $sql = "SELECT p.speed, p.price, u.start_date, u.end_date FROM subscriptions u 
-            JOIN plans p ON u.subscription_id = p.plan_id 
-            WHERE u.customer_id = $customer_id";
+    $sql = "SELECT p.speed, p.price, s.start_date, s.end_date 
+            FROM plans p
+            JOIN subscriptions s on s.plan_id = p.plan_id
+            WHERE s.customer_id = $customer_id";
     $usage_result = $conn->query($sql);
     $usage = [];
     if ($usage_result->num_rows > 0) {

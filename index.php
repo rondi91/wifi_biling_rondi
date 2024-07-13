@@ -11,12 +11,12 @@
         <nav class="sidebar">
             <h2>Admin Dashboard</h2>
             <ul>
-                <li><a href="#">Dashboard</a></li>
+                <li><a href="/">Dashboard</a></li>
                 <li><a href="customer/customers.php">Customers</a></li>
                 <li><a href="#">Plans</a></li>
                 <li><a href="#">Subscriptions</a></li>
                 <li><a href="#">Usage</a></li>
-                <li><a href="#">Billing</a></li>
+                <li><a href="billings/billing.php">Billing</a></li>
                 <li><a href="#">Payments</a></li>
             </ul>
         </nav>
