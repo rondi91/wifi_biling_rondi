@@ -4,6 +4,7 @@ include '../config.php';
 // Default values for month and year
 $selected_month = isset($_GET['month']) ? $_GET['month'] : date('m');
 $selected_year = isset($_GET['year']) ? $_GET['year'] : date('Y');
+$selected_status = isset($_GET['status']) ? $_GET['status'] : 'all';
 
 // Fetch billing data from the database based on filter
 $sql = "SELECT b.billing_id, b.customer_id, b.billing_date, b.amount, b.status, 
@@ -13,9 +14,18 @@ $sql = "SELECT b.billing_id, b.customer_id, b.billing_date, b.amount, b.status,
         JOIN subscriptions s ON c.customer_id = s.plan_id
         JOIN plans p on s.plan_id = p.plan_id
         WHERE MONTH(b.billing_date) = ? AND YEAR(b.billing_date) = ?";
-        
+
+if ($selected_status !== 'all') {
+    $sql .= " AND b.status = ?";
+}
 $stmt = $conn->prepare($sql);
-$stmt->bind_param('ii', $selected_month, $selected_year);
+if ($selected_status !== 'all') {
+    $stmt->bind_param('iis', $selected_month, $selected_year, $selected_status);
+} else {
+    $stmt->bind_param('ii', $selected_month, $selected_year);
+}
+        
+
 $stmt->execute();
 $result = $stmt->get_result();
 $billings = [];
@@ -59,6 +69,14 @@ $conn->close();
                         <?php echo $y; ?>
                     </option>
                 <?php endfor; ?>
+            </select>
+        </div>
+        <div class="form-group mr-2">
+            <label for="status" class="mr-2">Status</label>
+            <select class="form-control" id="status" name="status">
+                <option value="all" <?php if ($selected_status == 'all') echo 'selected'; ?>>All</option>
+                <option value="Lunas" <?php if ($selected_status == 'Lunas') echo 'selected'; ?>>Lunas</option>
+                <option value="Belum Dibayar" <?php if ($selected_status == 'Belum Dibayar') echo 'selected'; ?>>Belum Dibayar</option>
             </select>
         </div>
         <button type="submit" class="btn btn-primary">Filter</button>
