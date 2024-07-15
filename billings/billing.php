@@ -6,6 +6,15 @@ $selected_month = isset($_GET['month']) ? $_GET['month'] : date('m');
 $selected_year = isset($_GET['year']) ? $_GET['year'] : date('Y');
 $selected_status = isset($_GET['status']) ? $_GET['status'] : 'all';
 
+function getIndonesianMonth($monthNumber) {
+    $months = [
+        1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+        5 => 'Mei', 6 => 'Juni', 07 => 'Juli', 8 => 'Agustus',
+        9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+    ];
+    return $months[(int)$monthNumber];
+}
+
 // Fetch billing data from the database based on filter
 $sql = "SELECT b.billing_id, b.customer_id, b.billing_date, b.amount, b.status, 
                c.first_name, c.last_name, p.speed, p.price
@@ -101,7 +110,10 @@ $conn->close();
                     <td><?php echo $billing['first_name'] . ' ' . $billing['last_name']; ?></td>
                     <td><?php echo $billing['speed']; ?></td>
                     <td><?php echo 'Rp. ' . number_format($billing['price'], 2, ',', '.'); ?></td>
-                    <td><?php echo $billing['billing_date']; ?></td>
+                    <td><?php 
+                        $date = new DateTime($billing['billing_date']);
+                        echo $date->format('d') . ' ' . getIndonesianMonth($date->format('m')) . ' ' . $date->format('Y'); 
+                    ?></td>
                     <td><?php echo 'Rp. ' . number_format($billing['amount'], 2, ',', '.'); ?></td>
                     <td><?php echo $billing['status']; ?></td>
                 </tr>
