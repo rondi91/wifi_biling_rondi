@@ -5,6 +5,7 @@ include '../config.php';
 $selected_month = isset($_GET['month']) ? $_GET['month'] : date('m');
 $selected_year = isset($_GET['year']) ? $_GET['year'] : date('Y');
 $selected_status = isset($_GET['status']) ? $_GET['status'] : 'all';
+$search_query = isset($_GET['search']) ? $_GET['search'] : '';
 
 function getIndonesianMonth($monthNumber) {
     $months = [
@@ -24,14 +25,30 @@ $sql = "SELECT b.billing_id, b.customer_id, b.billing_date, b.amount, b.status,
         JOIN plans p on s.plan_id = p.plan_id
         WHERE MONTH(b.billing_date) = ? AND YEAR(b.billing_date) = ?";
 
+$params = [$selected_month, $selected_year];
+$types = 'ii';
+
 if ($selected_status !== 'all') {
     $sql .= " AND b.status = ?";
+    $params[] = $selected_status;
+    $types .= 's';
+}
+// QUERY SEARCH 
+if (!empty($search_query)) {
+    $sql .= " AND (c.first_name LIKE ? OR c.last_name LIKE ?)";
+    $search_query = '%' . $search_query . '%';
+    $params[] = $search_query;
+    $params[] = $search_query;
+    $types .= 'ss';
+
 }
 $stmt = $conn->prepare($sql);
-if ($selected_status !== 'all') {
-    $stmt->bind_param('iis', $selected_month, $selected_year, $selected_status);
-} else {
-    $stmt->bind_param('ii', $selected_month, $selected_year);
+
+// Debugging: Check if the parameters and types are correct
+// var_dump($types, $params);
+
+if ($types && $params) {
+    $stmt->bind_param($types, ...$params);
 }
         
 
@@ -88,6 +105,14 @@ $conn->close();
                 <option value="Belum Dibayar" <?php if ($selected_status == 'Belum Dibayar') echo 'selected'; ?>>Belum Dibayar</option>
             </select>
         </div>
+
+        <!-- SEARCH  -->
+        <div class="form-group mr-2">
+            <label for="search" class="mr-2">Search</label>
+            <input type="text" class="form-control" id="search" name="search" placeholder="Customer Name" value="<?php echo isset($_GET['search']) ? $_GET['search'] : ''; ?>">
+                </div>
+                    
+
         <button type="submit" class="btn btn-primary">Filter</button>
     </form>
 
