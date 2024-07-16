@@ -1,6 +1,5 @@
 <?php
 include '../config.php';
-
 function getIndonesianMonth($monthNumber) {
     $months = [
         1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
@@ -28,13 +27,22 @@ if (isset($_GET['billing_id'])) {
     if ($billing) {
         // Proses pembayaran logika disini
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Misalnya mengubah status tagihan menjadi lunas
+            $payment_method = $_POST['payment_method'];
+            $amount = $billing['amount'];
+            $payment_date = date('Y-m-d H:i:s'); // Mendapatkan tanggal dan waktu saat ini
+
+            // Simpan detail pembayaran ke tabel payments
+            $payment_stmt = $conn->prepare("INSERT INTO payments (billing_id, payment_method, amount, payment_date) VALUES (?, ?, ?, ?)");
+            $payment_stmt->bind_param("isss", $billing_id, $payment_method, $amount, $payment_date);
+            $payment_stmt->execute();
+
+            // Update status tagihan menjadi lunas
             $update_stmt = $conn->prepare("UPDATE billing SET status = 'Lunas' WHERE billing_id = ?");
             $update_stmt->bind_param("i", $billing_id);
             $update_stmt->execute();
 
             // Redirect ke halaman billing
-            header("Location: billing.php");
+            header("Location: ../billings/billing.php");
             exit();
         }
     } else {
@@ -68,8 +76,18 @@ if (isset($_GET['billing_id'])) {
     <p>Amount: Rp. <?php echo number_format($billing['amount'], 2, ',', '.'); ?></p>
     <p>Status: <?php echo $billing['status']; ?></p>
 
-    <?php if ($billing['status'] == 'Belum Lunas'): ?>
+    <?php if ($billing['status'] == 'Belum Dibayar'): ?>
         <form method="POST" action="">
+            <div class="form-group">
+                <label for="payment_method">Payment Method</label>
+                <select class="form-control" id="payment_method" name="payment_method" required>
+                    <option value="Transfer Bank">Transfer Bank</option>
+                    <option value="Kartu Kredit">Kartu Kredit</option>
+                    <option value="E-Wallet">E-Wallet</option>
+                    <option value="Tunai">Tunai</option>
+                </select>
+            </div>
+            <p>Total Payment: Rp. <?php echo number_format($billing['amount'], 2, ',', '.'); ?></p>
             <button type="submit" class="btn btn-success">Bayar</button>
         </form>
     <?php else: ?>
