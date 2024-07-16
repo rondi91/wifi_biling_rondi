@@ -1,69 +1,7 @@
 <?php
 include '../config.php';
-
-// Default values for month and year
-$selected_month = isset($_GET['month']) ? $_GET['month'] : date('m');
-$selected_year = isset($_GET['year']) ? $_GET['year'] : date('Y');
-$selected_status = isset($_GET['status']) ? $_GET['status'] : 'all';
-$search_query = isset($_GET['search']) ? $_GET['search'] : '';
-
-function getIndonesianMonth($monthNumber) {
-    $months = [
-        1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
-        5 => 'Mei', 6 => 'Juni', 07 => 'Juli', 8 => 'Agustus',
-        9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
-    ];
-    return $months[(int)$monthNumber];
-}
-
-// Fetch billing data from the database based on filter
-$sql = "SELECT b.billing_id, b.customer_id, b.billing_date, b.amount, b.status, 
-               c.first_name, c.last_name, p.speed, p.price
-        FROM billing b
-        JOIN customers c ON b.customer_id = c.customer_id
-        JOIN subscriptions s ON c.customer_id = s.plan_id
-        JOIN plans p on s.plan_id = p.plan_id
-        WHERE MONTH(b.billing_date) = ? AND YEAR(b.billing_date) = ?";
-
-$params = [$selected_month, $selected_year];
-$types = 'ii';
-
-if ($selected_status !== 'all') {
-    $sql .= " AND b.status = ?";
-    $params[] = $selected_status;
-    $types .= 's';
-}
-// QUERY SEARCH 
-if (!empty($search_query)) {
-    $sql .= " AND (c.first_name LIKE ? OR c.last_name LIKE ?)";
-    $search_query = '%' . $search_query . '%';
-    $params[] = $search_query;
-    $params[] = $search_query;
-    $types .= 'ss';
-
-}
-$stmt = $conn->prepare($sql);
-
-// Debugging: Check if the parameters and types are correct
-// var_dump($types, $params);
-
-if ($types && $params) {
-    $stmt->bind_param($types, ...$params);
-}
-        
-
-$stmt->execute();
-$result = $stmt->get_result();
-$billings = [];
-if ($result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) {
-        $billings[] = $row;
-    }
-}
-
-$conn->close();
+include 'search_billing.php';
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -76,13 +14,13 @@ $conn->close();
 <div class="container">
     <h1>Billing List</h1>
     
-    <form method="GET" action="" class="form-inline mb-3">
+    <form method="GET" action="" class="form-inline mb-3" id="filter-form">
         <div class="form-group mr-2">
             <label for="month" class="mr-2">Month</label>
             <select class="form-control" id="month" name="month">
                 <?php for ($m=1; $m<=12; $m++): ?>
                     <option value="<?php echo $m; ?>" <?php if ($m == $selected_month) echo 'selected'; ?>>
-                        <?php echo date('F', mktime(0, 0, 0, $m, 1)); ?>
+                        <?php echo getIndonesianMonth($m); ?>
                     </option>
                 <?php endfor; ?>
             </select>
@@ -102,21 +40,17 @@ $conn->close();
             <select class="form-control" id="status" name="status">
                 <option value="all" <?php if ($selected_status == 'all') echo 'selected'; ?>>All</option>
                 <option value="Lunas" <?php if ($selected_status == 'Lunas') echo 'selected'; ?>>Lunas</option>
-                <option value="Belum Dibayar" <?php if ($selected_status == 'Belum Dibayar') echo 'selected'; ?>>Belum Dibayar</option>
+                <option value="Belum Lunas" <?php if ($selected_status == 'Belum Lunas') echo 'selected'; ?>>Belum Lunas</option>
             </select>
         </div>
-
-        <!-- SEARCH  -->
         <div class="form-group mr-2">
             <label for="search" class="mr-2">Search</label>
             <input type="text" class="form-control" id="search" name="search" placeholder="Customer Name" value="<?php echo isset($_GET['search']) ? $_GET['search'] : ''; ?>">
-                </div>
-                    
-
+        </div>
         <button type="submit" class="btn btn-primary">Filter</button>
     </form>
 
-    <table class="table table-striped">
+    <table class="table table-striped" id="billing-table">
         <thead>
             <tr>
                 <th>Billing ID</th>
@@ -147,8 +81,52 @@ $conn->close();
     </table>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script>
+$(document).ready(function(){
+    $("#search").on("input", function() {
+        var searchQuery = $(this).val();
+        var month = $("#month").val();
+        var year = $("#year").val();
+        var status = $("#status").val();
+        
+        $.ajax({
+            url: "search_billing.php",
+            method: "GET",
+            data: {
+                search: searchQuery,
+                month: month,
+                year: year,
+                status: status
+            },
+            success: function(data) {
+                // console.log(data); // Debugging: Lihat respons dari server
+                try {
+                    var billings = JSON.parse(data);
+                    var rows = '';
+                    billings.forEach(function(billing) {
+                        rows += '<tr>' +
+                            '<td>' + billing.billing_id + '</td>' +
+                            '<td>' + billing.first_name + ' ' + billing.last_name + '</td>' +
+                            '<td>' + billing.speed + '</td>' +
+                            '<td>Rp. ' + Number(billing.price).toLocaleString('id-ID', {minimumFractionDigits: 2}) + '</td>' +
+                            '<td>' + billing.billing_date + '</td>' +
+                            '<td>Rp. ' + Number(billing.amount).toLocaleString('id-ID', {minimumFractionDigits: 2}) + '</td>' +
+                            '<td>' + billing.status + '</td>' +
+                        '</tr>';
+                    });
+                    $("#billing-table tbody").html(rows);
+                } catch (e) {
+                    console.error("Error parsing JSON:", e);
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error("AJAX Error:", textStatus, errorThrown);
+            }
+        });
+    });
+});
+</script>
+
 </body>
 </html>
