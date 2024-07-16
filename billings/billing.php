@@ -1,6 +1,6 @@
-<?php
-include '../config.php';
-include 'search_billing.php';
+<?php 
+include 'search_billing.php'
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -60,6 +60,7 @@ include 'search_billing.php';
                 <th>Billing Date</th>
                 <th>Amount</th>
                 <th>Status</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
@@ -75,10 +76,20 @@ include 'search_billing.php';
                     ?></td>
                     <td><?php echo 'Rp. ' . number_format($billing['amount'], 2, ',', '.'); ?></td>
                     <td><?php echo $billing['status']; ?></td>
+                    <td>
+                        <?php if ($billing['status'] == 'Belum Dibayar'): ?>
+                            <a href="../payments/payment.php?billing_id=<?php echo $billing['billing_id']; ?>" class="btn btn-primary">Bayar</a>
+                        <?php endif; ?>
+                    </td>
                 </tr>
             <?php endforeach; ?>
         </tbody>
     </table>
+
+    <div class="mt-3">
+        <h3>JSON Output</h3>
+        <pre id="json-output"></pre>
+    </div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
@@ -100,7 +111,8 @@ $(document).ready(function(){
                 status: status
             },
             success: function(data) {
-                // console.log(data); // Debugging: Lihat respons dari server
+                console.log(data); // Debugging: Lihat respons dari server
+                $("#json-output").text(JSON.stringify(data, null, 2)); // Menampilkan JSON di bawah tabel
                 try {
                     var billings = JSON.parse(data);
                     var rows = '';
@@ -113,7 +125,11 @@ $(document).ready(function(){
                             '<td>' + billing.billing_date + '</td>' +
                             '<td>Rp. ' + Number(billing.amount).toLocaleString('id-ID', {minimumFractionDigits: 2}) + '</td>' +
                             '<td>' + billing.status + '</td>' +
-                        '</tr>';
+                            '<td>';
+                        if (billing.status == 'Belum Dibayar') {
+                            rows += '<a href="../payments/payment.php?billing_id=' + billing.billing_id + '" class="btn btn-primary">Bayar</a>';
+                        }
+                        rows += '</td></tr>';
                     });
                     $("#billing-table tbody").html(rows);
                 } catch (e) {
@@ -127,6 +143,5 @@ $(document).ready(function(){
     });
 });
 </script>
-
 </body>
 </html>
