@@ -4,9 +4,9 @@ include '../config.php';
 
 function getIndonesianMonth($monthNumber) {
     $months = [
-        1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
-        5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
-        9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April',
+        5 => 'May', 6 => 'June', 7 => 'July', 8 => 'August',
+        9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December'
     ];
     return $months[(int)$monthNumber];
 }
@@ -23,8 +23,8 @@ $sql = "SELECT b.billing_id, b.customer_id, b.billing_date, b.amount, b.status,
                c.first_name, c.last_name, p.speed, p.price
         FROM billing b
         JOIN customers c ON b.customer_id = c.customer_id
-        JOIN subscriptions s ON c.customer_id = s.plan_id
-        JOIN plans p on s.plan_id = p.plan_id
+        left JOIN subscriptions s on c.customer_id = s.customer_id
+        left JOIN plans p on s.plan_id =p.plan_id
         WHERE MONTH(b.billing_date) = ? AND YEAR(b.billing_date) = ?";
 $params = [$selected_month, $selected_year];
 $types = 'ii';
@@ -47,6 +47,8 @@ $stmt = $conn->prepare($sql);
 $stmt->bind_param($types, ...$params);
 $stmt->execute();
 $result = $stmt->get_result();
+// var_dump($result);
+// die();
 $billings = [];
 if ($result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
@@ -54,7 +56,7 @@ if ($result->num_rows > 0) {
         $billings[] = $row;
     }
 }
-ob_end_clean(); // Bersihkan buffer output sebelum mengirimkan JSON
+// Bersihkan buffer output sebelum mengirimkan JSON ob_end_clean(); 
 echo json_encode($billings);
 
 ?>

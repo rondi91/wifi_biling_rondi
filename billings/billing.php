@@ -72,12 +72,12 @@ include 'search_billing.php'
                     <td><?php echo 'Rp. ' . number_format($billing['price'], 2, ',', '.'); ?></td>
                     <td><?php 
                         $date = new DateTime($billing['billing_date']);
-                        echo $date->format('d') . ' ' . getIndonesianMonth($date->format('m')) . ' ' . $date->format('Y'); 
+                        echo $date->format('d') . ' ' . getIndonesianMonth($date->format('m')) . ' ' . $date->format('Y');      
                     ?></td>
                     <td><?php echo 'Rp. ' . number_format($billing['amount'], 2, ',', '.'); ?></td>
                     <td><?php echo $billing['status']; ?></td>
                     <td>
-                        <?php if ($billing['status'] == 'Belum Dibayar'): ?>
+                        <?php if ($billing['status'] == 'Belum Lunas'): ?>
                             <a href="../payments/payment.php?billing_id=<?php echo $billing['billing_id']; ?>" class="btn btn-primary">Bayar</a>
                         <?php endif; ?>
                     </td>
@@ -126,7 +126,7 @@ $(document).ready(function(){
                             '<td>Rp. ' + Number(billing.amount).toLocaleString('id-ID', {minimumFractionDigits: 2}) + '</td>' +
                             '<td>' + billing.status + '</td>' +
                             '<td>';
-                        if (billing.status == 'Belum Dibayar') {
+                        if (billing.status == 'Belum Lunas') {
                             rows += '<a href="../payments/payment.php?billing_id=' + billing.billing_id + '" class="btn btn-primary">Bayar</a>';
                         }
                         rows += '</td></tr>';

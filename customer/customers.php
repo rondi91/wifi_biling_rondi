@@ -100,6 +100,18 @@ if ($result->num_rows > 0) {
 <body>
     <div class="container">
         <h1>Customer Management</h1>
+        <nav class="sidebar">
+            
+            <ul>
+                <li><a href="/">Dashboard</a></li>
+                <li><a href="customers.php">Customers</a></li>
+                <li><a href="#">Plans</a></li>
+                <li><a href="#">Subscriptions</a></li>
+                <li><a href="#">Usage</a></li>
+                <li><a href="../billings/billing.php">Billing</a></li>
+                <li><a href="#">Payments</a></li>
+            </ul>
+        </nav>
         
         <!-- Form untuk tambah pelanggan -->
         <form action="" method="POST">

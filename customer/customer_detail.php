@@ -29,18 +29,20 @@ if (isset($_GET['id'])) {
  
 
     // Ambil data transaksi pembayaran pelanggan
-    $sql = "SELECT * 
+    $sqlb = "SELECT b.billing_id ,b.amount, b.billing_date, b.status, pay.payment_id
             FROM billing b   
             LEFT join payments pay on b.billing_id = pay.billing_id
             WHERE customer_id = $customer_id
             ORDER BY billing_date DESC;";
-    $billing_result = $conn->query($sql);
+    $billing_result = $conn->query($sqlb);
     $billing = [];
     if ($billing_result->num_rows > 0) {
         while ($row = $billing_result->fetch_assoc()) {
             $billing[] = $row;
         }
     }
+    // print_r($billing);
+    // die();
 } else {
     echo "No customer ID provided";
     exit();
@@ -100,6 +102,10 @@ if (isset($_GET['id'])) {
                     <th>Billing Date</th>
                     <th>Status</th>
                 </tr>
+                <?php 
+                
+
+                ?>
                 <?php foreach ($billing as $b): ?>
                 <tr>
                     <td><?php echo $b['billing_id']; ?></td>
@@ -108,7 +114,7 @@ if (isset($_GET['id'])) {
                     <td><?php echo $b['status']; ?></td>
                     
                     <td>
-                        <a href="nota.php?id=<?php echo $b['billing_id']; ?>">View Nota</a>
+                        <a href="nota.php?payment_id=<?php echo $b['payment_id']; ?>">View Nota</a>
                     </td>
                 </tr>
                 <?php endforeach; ?>

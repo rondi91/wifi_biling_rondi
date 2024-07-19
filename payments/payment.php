@@ -16,13 +16,15 @@ if (isset($_GET['billing_id'])) {
     $stmt = $conn->prepare("SELECT b.*, c.first_name, c.last_name, p.speed, p.price
                             FROM billing b
                             JOIN customers c ON b.customer_id = c.customer_id
-                            JOIN subscriptions s on c.customer_id = s.plan_id
-                            JOIN plans p ON s.plan_id = p.plan_id
+                            left JOIN subscriptions s on c.customer_id = s.customer_id
+                            left JOIN plans p on s.plan_id =p.plan_id
                             WHERE b.billing_id = ?");
     $stmt->bind_param("i", $billing_id);
     $stmt->execute();
     $result = $stmt->get_result();
     $billing = $result->fetch_assoc();
+    // var_dump($billing_id);
+    // die();
     
     if ($billing) {
         // Proses pembayaran logika disini
@@ -35,14 +37,17 @@ if (isset($_GET['billing_id'])) {
             $payment_stmt = $conn->prepare("INSERT INTO payments (billing_id, payment_method, amount, payment_date) VALUES (?, ?, ?, ?)");
             $payment_stmt->bind_param("isss", $billing_id, $payment_method, $amount, $payment_date);
             $payment_stmt->execute();
+            $payment_id = $conn->insert_id; // Dapatkan ID pembayaran terakhir yang dimasukkan
 
             // Update status tagihan menjadi lunas
             $update_stmt = $conn->prepare("UPDATE billing SET status = 'Lunas' WHERE billing_id = ?");
             $update_stmt->bind_param("i", $billing_id);
             $update_stmt->execute();
+            
 
             // Redirect ke halaman billing
-            header("Location: ../billings/billing.php");
+            header("Location: ../customer/nota.php?payment_id=$payment_id");
+            // header("Location: ../billings/billing.php");       
             exit();
         }
     } else {
@@ -76,7 +81,7 @@ if (isset($_GET['billing_id'])) {
     <p>Amount: Rp. <?php echo number_format($billing['amount'], 2, ',', '.'); ?></p>
     <p>Status: <?php echo $billing['status']; ?></p>
 
-    <?php if ($billing['status'] == 'Belum Dibayar'): ?>
+    <?php if ($billing['status'] == 'Belum Lunas'): ?>
         <form method="POST" action="">
             <div class="form-group">
                 <label for="payment_method">Payment Method</label>
