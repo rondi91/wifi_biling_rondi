@@ -72,10 +72,9 @@ for ($i = 1; $i <= 12; $i++) {
 }
 
 // Data for Chart.js
-$months = json_encode(array_keys($amounts));
+$months_labels = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 $amounts = json_encode(array_values($amounts));
-var_dump($amounts);
-
+$months_labels = json_encode($months_labels);
 
 ?>
 
@@ -170,31 +169,31 @@ var_dump($amounts);
                 </div>
        
 
-                        <script>
-                        document.addEventListener("DOMContentLoaded", function() {
-                            const ctx = document.getElementById('amountChart').getContext('2d');
-                            const amountChart = new Chart(ctx, {
-                                type: 'bar',
-                                data: {
-                                    labels: <?php echo $months; ?>,
-                                    datasets: [{
-                                        label: 'Total Amount',
-                                        data: <?php echo $amounts; ?>,
-                                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                                        borderColor: 'rgba(75, 192, 192, 1)',
-                                        borderWidth: 1
-                                    }]
-                                },
-                                options: {
-                                    scales: {
-                                        y: {
-                                            beginAtZero: true
-                                        }
-                                    }
-                                }
-                            });
-                        });
-                    </script>
+                <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const ctx = document.getElementById('amountChart').getContext('2d');
+        const amountChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: <?php echo $months_labels; ?>,
+                datasets: [{
+                    label: 'Total Amount',
+                    data: <?php echo $amounts; ?>,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    });
+</script>
          </div>
         </main>
     </div>
