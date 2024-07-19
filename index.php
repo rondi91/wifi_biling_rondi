@@ -2,6 +2,17 @@
 include 'config.php';
 
 
+// Total all user price
+$total_all_query = " SELECT sum(p.price) as price
+        from
+        customers c
+        JOIN subscriptions s on c.customer_id = s.customer_id
+        JOIN plans p ON s.plan_id = p.plan_id";
+
+$total_all_result = $conn->query($total_all_query);
+$total_all = $total_all_result->fetch_assoc()['price'];
+
+
 // Total semua amount
 $total_amount_query = "SELECT SUM(amount) as total_amount FROM payments";
 $total_amount_result = $conn->query($total_amount_query);
@@ -145,6 +156,10 @@ $selected_year = isset($_GET['year']) ? $_GET['year'] : date('Y');
                 <div class="container">
                     <h1>Dashboard</h1>
                     <div class="info-box">
+                        <div class="box">
+                            <h3>Total all user price</h3>
+                            <p>Rp. <?php echo number_format($total_all, 2, ',', '.'); ?></p>
+                        </div>
                         <div class="box">
                             <h3>Total Semua Amount</h3>
                             <p>Rp. <?php echo number_format($total_amount, 2, ',', '.'); ?></p>
