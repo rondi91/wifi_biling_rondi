@@ -41,40 +41,19 @@ while ($row = $amount_per_month_result->fetch_assoc()) {
     $amount_per_month[] = $row;
 }
 
-// data chart 
-// Data amount per bulan
-$amount_per_month_query = "
-    SELECT 
-        MONTH(payment_date) as month, 
-        SUM(amount) as total_amount 
-    FROM 
-        payments 
-    WHERE 
-        YEAR(payment_date) = ?
-    GROUP BY 
-        MONTH(payment_date)";
-$current_year = date('Y');
-$stmt = $conn->prepare($amount_per_month_query);
-$stmt->bind_param("i", $current_year);
-$stmt->execute();
-$amount_per_month_result = $stmt->get_result();
 
-$amounts = [];
-while ($row = $amount_per_month_result->fetch_assoc()) {
-    $amounts[(int)$row['month']] = $row['total_amount'];
+
+// menambahkan select tahun pada chart payments 
+// Mendapatkan tahun-tahun yang ada di database
+$years_query = "SELECT DISTINCT YEAR(payment_date) as year FROM payments ORDER BY year DESC";
+$years_result = $conn->query($years_query);
+$years = [];
+while ($row = $years_result->fetch_assoc()) {
+    $years[] = $row['year'];
 }
 
-// Initialize all months
-for ($i = 1; $i <= 12; $i++) {
-    if (!isset($amounts[$i])) {
-        $amounts[$i] = 0;
-    }
-}
-
-// Data for Chart.js
-$months_labels = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-$amounts = json_encode(array_values($amounts));
-$months_labels = json_encode($months_labels);
+// Menentukan tahun yang dipilih
+$selected_year = isset($_GET['year']) ? $_GET['year'] : date('Y');
 
 ?>
 
@@ -163,37 +142,92 @@ $months_labels = json_encode($months_labels);
                         </div>
                     </div>
 
+                    <div class="year-select">
+                        <label for="year">Pilih Tahun:</label>
+                        <select id="year" name="year" class="form-control" onchange="updateYear(this.value)">
+                            <?php foreach ($years as $year): ?>
+                                <option value="<?php echo $year; ?>" <?php if ($year == $selected_year) echo 'selected'; ?>>
+                                    <?php echo $year; ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
                         <div class="chart-container">
                             <canvas id="amountChart"></canvas>
                         </div>
                 </div>
        
 
-                <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const ctx = document.getElementById('amountChart').getContext('2d');
-        const amountChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: <?php echo $months_labels; ?>,
-                datasets: [{
-                    label: 'Total Amount',
-                    data: <?php echo $amounts; ?>,
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-    });
-</script>
+    <script>
+        function updateYear(year) {
+            window.location.href = 'index.php?year=' + year;
+        }
+    </script>
+
+<?php
+// Data amount per bulan berdasarkan tahun yang dipilih
+$amount_per_month_query = "
+    SELECT 
+        MONTH(payment_date) as month, 
+        SUM(amount) as total_amount 
+    FROM 
+        payments 
+    WHERE 
+        YEAR(payment_date) = ?
+    GROUP BY 
+        MONTH(payment_date)";
+$stmt = $conn->prepare($amount_per_month_query);
+$stmt->bind_param("i", $selected_year);
+$stmt->execute();
+$amount_per_month_result = $stmt->get_result();
+
+$amounts = [];
+while ($row = $amount_per_month_result->fetch_assoc()) {
+    $amounts[(int)$row['month']] = $row['total_amount'];
+}
+
+// Initialize all months
+for ($i = 1; $i <= 12; $i++) {
+    if (!isset($amounts[$i])) {
+        $amounts[$i] = 0;
+    }
+}
+
+// Data for Chart.js
+$months_labels = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+$amounts = json_encode(array_values($amounts));
+$months_labels = json_encode($months_labels);
+?>
+
+
+            <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    const ctx = document.getElementById('amountChart').getContext('2d');
+                    const amountChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: <?php echo $months_labels; ?>,
+                            datasets: [{
+                                label: 'Total Amount',
+                                data: <?php echo $amounts; ?>,
+                                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                });
+            </script>
+
+
          </div>
         </main>
     </div>
