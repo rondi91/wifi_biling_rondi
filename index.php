@@ -17,15 +17,40 @@ $stmt->execute();
 $total_amount_month_result = $stmt->get_result();
 $total_amount_month = $total_amount_month_result->fetch_assoc()['total_amount_month'];
 
-// Jumlah yang sudah membayar
-$paid_count_query = "SELECT COUNT(*) as paid_count FROM billing WHERE status = 'Lunas'";
-$paid_count_result = $conn->query($paid_count_query);
-$paid_count = $paid_count_result->fetch_assoc()['paid_count'];
+// Jumlah yang sudah membayar bulan ini
+$paid_count_query = "
+    SELECT 
+        COUNT(*) as paid_count 
+    FROM 
+    billing b 
+    JOIN payments pay on pay.billing_id = b.billing_id
+    WHERE 
+        YEAR(pay.payment_date) = ? AND MONTH(pay.payment_date) = ? AND b.status = 'lunas'";
+$stmt = $conn->prepare($paid_count_query);
+$stmt->bind_param("ii", $current_year, $current_month);
+// var_dump($stmt);
+// die();
+$stmt->execute();
+$paid_count_result = $stmt->get_result();
+$paid_count_row = $paid_count_result->fetch_assoc();
+$paid_count = $paid_count_row['paid_count'];
 
 // Jumlah yang belum membayar
-$unpaid_count_query = "SELECT COUNT(*) as unpaid_count FROM billing WHERE status = 'Belum Lunas'";
-$unpaid_count_result = $conn->query($unpaid_count_query);
-$unpaid_count = $unpaid_count_result->fetch_assoc()['unpaid_count'];
+$unpaid_count_query = "
+    SELECT 
+        COUNT(*) as unpaid_count 
+    FROM 
+        billing b 
+    
+    WHERE 
+        YEAR(b.billing_date) = ? AND MONTH(b.billing_date) = ? AND  b.status = 'Belum Lunas'";;
+        
+$stmt = $conn->prepare($unpaid_count_query);
+$stmt->bind_param("ii", $current_year, $current_month);
+$stmt->execute();
+$unpaid_count_result = $stmt->get_result();
+$unpaid_count_row = $unpaid_count_result->fetch_assoc();
+$unpaid_count = $unpaid_count_row['unpaid_count'];
 
 // Jumlah customer
 $customer_count_query = "SELECT COUNT(*) as customer_count FROM customers";
