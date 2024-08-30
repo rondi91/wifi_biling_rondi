@@ -17,7 +17,7 @@ $total_all = $total_all_result->fetch_assoc()['price'];
 $total_amount_query = "SELECT SUM(amount) as total_amount FROM payments";
 $total_amount_result = $conn->query($total_amount_query);
 $total_amount = $total_amount_result->fetch_assoc()['total_amount'];
-
+    
 // Total amount bulan ini
 $current_month = date('m');
 $current_year = date('Y');
@@ -46,7 +46,7 @@ $paid_count_result = $stmt->get_result();
 $paid_count_row = $paid_count_result->fetch_assoc();
 $paid_count = $paid_count_row['paid_count'];
 
-// Jumlah yang belum membayar
+// Jumlah yang belum membayar bulan ini
 $unpaid_count_query = "
     SELECT 
         COUNT(*) as unpaid_count 
@@ -63,19 +63,29 @@ $unpaid_count_result = $stmt->get_result();
 $unpaid_count_row = $unpaid_count_result->fetch_assoc();
 $unpaid_count = $unpaid_count_row['unpaid_count'];
 
+// Jumlah yang sudah membayar
+$paid_count_query = "SELECT COUNT(*) as paid_count FROM billing WHERE status = 'Lunas'";
+$paid_count_result = $conn->query($paid_count_query);
+$paid_count_all = $paid_count_result->fetch_assoc()['paid_count'];
+
+// Jumlah yang belum membayar
+$unpaid_count_query = "SELECT COUNT(*) as unpaid_count FROM billing WHERE status = 'Belum Lunas'";
+$unpaid_count_result = $conn->query($unpaid_count_query);
+$unpaid_count_all= $unpaid_count_result->fetch_assoc()['unpaid_count'];
+
 // Jumlah customer
 $customer_count_query = "SELECT COUNT(*) as customer_count FROM customers";
 $customer_count_result = $conn->query($customer_count_query);
 $customer_count = $customer_count_result->fetch_assoc()['customer_count'];
 
-// Data amount tiap bulan untuk grafik
-$amount_per_month_query = "SELECT MONTH(payment_date) as month, YEAR(payment_date) as year, SUM(amount) as total_amount FROM payments GROUP BY year, month ORDER BY year, month";
-$amount_per_month_result = $conn->query($amount_per_month_query);
+// // Data amount tiap bulan untuk grafik
+// $amount_per_month_query = "SELECT MONTH(payment_date) as month, YEAR(payment_date) as year, SUM(amount) as total_amount FROM payments GROUP BY year, month ORDER BY year, month";
+// $amount_per_month_result = $conn->query($amount_per_month_query);
 
-$amount_per_month = [];
-while ($row = $amount_per_month_result->fetch_assoc()) {
-    $amount_per_month[] = $row;
-}
+// $amount_per_month = [];
+// while ($row = $amount_per_month_result->fetch_assoc()) {
+//     $amount_per_month[] = $row;
+// }
 
 
 
@@ -90,6 +100,38 @@ while ($row = $years_result->fetch_assoc()) {
 
 // Menentukan tahun yang dipilih
 $selected_year = isset($_GET['year']) ? $_GET['year'] : date('Y');
+// Inisialisasi array untuk amount per bulan
+$amounts = array_fill(1, 12, 0); // Array dengan 12 elemen, diisi 0
+
+// Query untuk mendapatkan data amount per bulan berdasarkan tahun yang dipilih
+$amount_per_month_query = "
+    SELECT 
+        MONTH(payment_date) as month, 
+        SUM(amount) as total_amount 
+    FROM 
+        payments 
+    WHERE 
+        YEAR(payment_date) = ?
+    GROUP BY 
+        MONTH(payment_date)";
+$stmt = $conn->prepare($amount_per_month_query);
+$stmt->bind_param("i", $selected_year);
+$stmt->execute();
+$amount_per_month_result = $stmt->get_result();
+
+// Mengisi array $amounts dengan data dari hasil query
+while ($row = $amount_per_month_result->fetch_assoc()) {
+    $amounts[(int)$row['month']] = (float)$row['total_amount'];
+}
+
+// Data for Chart.js
+$months_labels = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+$amounts = json_encode(array_values($amounts));
+$months_labels = json_encode($months_labels);
+
+
+
+
 
 ?>
 
@@ -169,11 +211,19 @@ $selected_year = isset($_GET['year']) ? $_GET['year'] : date('Y');
                             <p>Rp. <?php echo number_format($total_amount_month, 2, ',', '.'); ?></p>
                         </div>
                         <div class="box">
-                            <h3>Jumlah yang Sudah Membayar</h3>
+                            <h3>Jumlah tagihan Sudah Membayar all</h3>
+                            <p><?php echo $paid_count_all; ?> pembayaran</p>
+                        </div>
+                        <div class="box">
+                            <h3>Jumlah tagihan Belum Membayar all </h3>
+                            <p><?php echo $unpaid_count_all; ?> pembayaran</p>
+                        </div>
+                        <div class="box">
+                            <h3>Jumlah pembayan bulan ini</h3>
                             <p><?php echo $paid_count; ?> pembayaran</p>
                         </div>
                         <div class="box">
-                            <h3>Jumlah yang Belum Membayar</h3>
+                            <h3>Jumlah tagihan bulan ini</h3>
                             <p><?php echo $unpaid_count; ?> pembayaran</p>
                         </div>
                         <div class="box">
@@ -203,45 +253,7 @@ $selected_year = isset($_GET['year']) ? $_GET['year'] : date('Y');
         function updateYear(year) {
             window.location.href = 'index.php?year=' + year;
         }
-    </script>
 
-<?php
-// Data amount per bulan berdasarkan tahun yang dipilih
-$amount_per_month_query = "
-    SELECT 
-        MONTH(payment_date) as month, 
-        SUM(amount) as total_amount 
-    FROM 
-        payments 
-    WHERE 
-        YEAR(payment_date) = ?
-    GROUP BY 
-        MONTH(payment_date)";
-$stmt = $conn->prepare($amount_per_month_query);
-$stmt->bind_param("i", $selected_year);
-$stmt->execute();
-$amount_per_month_result = $stmt->get_result();
-
-$amounts = [];
-while ($row = $amount_per_month_result->fetch_assoc()) {
-    $amounts[(int)$row['month']] = $row['total_amount'];
-}
-
-// Initialize all months
-for ($i = 1; $i <= 12; $i++) {
-    if (!isset($amounts[$i])) {
-        $amounts[$i] = 0;
-    }
-}
-
-// Data for Chart.js
-$months_labels = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-$amounts = json_encode(array_values($amounts));
-$months_labels = json_encode($months_labels);
-?>
-
-
-            <script>
                 document.addEventListener("DOMContentLoaded", function() {
                     const ctx = document.getElementById('amountChart').getContext('2d');
                     const amountChart = new Chart(ctx, {

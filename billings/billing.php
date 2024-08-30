@@ -9,6 +9,14 @@ include 'search_billing.php'
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Billing List</title>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        .late-payment {
+            color: red;
+        }
+    </style>
+    </style>
+
 </head>
 <body>
 <div class="container">
@@ -58,6 +66,7 @@ include 'search_billing.php'
                 <th>Speed</th>
                 <th>Price</th>
                 <th>Billing Date</th>
+                <th>Due Date</th>
                 <th>Amount</th>
                 <th>Status</th>
                 <th>Action</th>
@@ -65,13 +74,24 @@ include 'search_billing.php'
         </thead>
         <tbody>
             <?php foreach ($billings as $billing): ?>
+                
+                <?php
+                $is_late = false;
+                if ($billing['due_date'] < date('Y-m-d') && ($billing['status'] != 'Lunas' || is_null($billing['status']))) {
+                    $is_late = true;
+                }
+                ?>
                 <tr>
                     <td><?php echo $billing['billing_id']; ?></td>
-                    <td><?php echo $billing['first_name'] . ' ' . $billing['last_name']; ?></td>
+                    <td class="<?php echo $is_late ? 'late-payment' : ''; ?>"><?php echo $billing['first_name'] . ' ' . $billing['last_name']; ?></td>
                     <td><?php echo $billing['speed']; ?></td>
                     <td><?php echo 'Rp. ' . number_format($billing['price'], 2, ',', '.'); ?></td>
                     <td><?php 
                         $date = new DateTime($billing['billing_date']);
+                        echo $date->format('d') . ' ' . getIndonesianMonth($date->format('m')) . ' ' . $date->format('Y');      
+                    ?></td>
+                    <td><?php 
+                        $date = new DateTime($billing['due_date']);
                         echo $date->format('d') . ' ' . getIndonesianMonth($date->format('m')) . ' ' . $date->format('Y');      
                     ?></td>
                     <td><?php echo 'Rp. ' . number_format($billing['amount'], 2, ',', '.'); ?></td>

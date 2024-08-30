@@ -116,10 +116,10 @@ if (isset($_GET['payment_id'])) {
         <strong>Harga Paket:</strong> Rp. <?php echo number_format($payment['price'], 2, ',', '.'); ?>
     </div>
     <div class="nota-section">
-        <strong>Admin Bank:</strong> Rp. 2.500,00
+        <strong>Admin Bank:</strong> Rp. 0
     </div>
     <div class="nota-section nota-total">
-        <strong>Total:</strong> Rp. <?php echo number_format($payment['amount'] + 2500, 2, ',', '.'); ?>
+        <strong>Total:</strong> Rp. <?php echo number_format($payment['amount'] + 0, 2, ',', '.'); ?>
     </div>
     <div class="nota-section nota-terbilang">
         <strong>Terbilang:</strong> <?php echo strtoupper(convert_number_to_words($payment['amount'] + 2500)); ?> RUPIAH

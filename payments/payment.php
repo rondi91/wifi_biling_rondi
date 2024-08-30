@@ -13,7 +13,7 @@ if (isset($_GET['billing_id'])) {
     $billing_id = $_GET['billing_id'];
 
     // Ambil informasi tagihan berdasarkan billing_id
-    $stmt = $conn->prepare("SELECT b.*, c.first_name, c.last_name, p.speed, p.price
+    $stmt = $conn->prepare("SELECT b.*, c.first_name, c.last_name, p.speed, p.price,s.start_date
                             FROM billing b
                             JOIN customers c ON b.customer_id = c.customer_id
                             left JOIN subscriptions s on c.customer_id = s.customer_id
@@ -23,7 +23,7 @@ if (isset($_GET['billing_id'])) {
     $stmt->execute();
     $result = $stmt->get_result();
     $billing = $result->fetch_assoc();
-    // var_dump($billing_id);
+    // var_dump($billing);
     // die();
     
     if ($billing) {
@@ -43,6 +43,22 @@ if (isset($_GET['billing_id'])) {
             $update_stmt = $conn->prepare("UPDATE billing SET status = 'Lunas' WHERE billing_id = ?");
             $update_stmt->bind_param("i", $billing_id);
             $update_stmt->execute();
+            
+            // UPDATE SUBSCRIPTION
+            $start_date = $billing['start_date']; 
+            $customer_id = $billing['customer_id']; 
+             
+            $start_date = date('Y-m-d', strtotime('+1 month', strtotime($start_date))); 
+            $due_date = date('Y-m-d', strtotime('+1 month', strtotime($start_date))); 
+            $update_stmt1 = "UPDATE subscriptions
+                                             SET start_date = '$start_date',
+                                             end_date = '$due_date'
+                                             WHERE customer_id = '$customer_id";
+             $update_stmt = $conn->prepare("UPDATE subscriptions SET start_date = '$start_date',
+                                             end_date = '$due_date'
+                                             WHERE customer_id = ?");
+             $update_stmt->bind_param("i", $customer_id);
+             $update_stmt->execute();
             
 
             // Redirect ke halaman billing

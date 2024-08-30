@@ -19,7 +19,7 @@ $search_query = isset($_GET['search']) ? $_GET['search'] : '';
 
 // Prepare SQL query based on selected filters
 // Fetch billing data from the database based on filter
-$sql = "SELECT b.billing_id, b.customer_id, b.billing_date, b.amount, b.status, 
+$sql = "SELECT b.billing_id, b.customer_id, b.billing_date, b.amount, b.status,b.due_date, 
                c.first_name, c.last_name, p.speed, p.price
         FROM billing b
         JOIN customers c ON b.customer_id = c.customer_id
